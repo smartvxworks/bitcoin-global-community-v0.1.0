@@ -216,5 +216,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **项目编号**: 7556575683889512767  
 **Creator**: Satoshi  
 **创建者**: Satoshi  
-**Project URL**: https://github.com/bitcoin-global-community/bitcoin-global-community  
-**项目地址**: https://github.com/bitcoin-global-community/bitcoin-global-community
+**Project URL**: https://github.com/smartvxworks/bitcoin-global-community-v0.1.0
+**项目地址**: https://github.com/smartvxworks/bitcoin-global-community-v0.1.0
