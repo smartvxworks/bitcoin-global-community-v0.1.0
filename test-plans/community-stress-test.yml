@@ -1,0 +1,251 @@
+# 社区讨论压力测试配置
+# 测试社区讨论相关接口的性能和并发处理能力
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 30    # 预热阶段
+      arrivalRate: 10
+      name: 'Warm up'
+    - duration: 120   # 稳定负载阶段
+      arrivalRate: 25
+      name: 'Sustained load'
+    - duration: 60    # 峰值负载阶段
+      arrivalRate: 50
+      name: 'Peak load'
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+  processor: "./artillery-custom-functions.js"
+  payload:
+    path: "test-data/community-users.csv"
+    fields:
+      - "phone"
+      - "password"
+
+scenarios:
+  - name: "社区讨论完整流程测试"
+    flow:
+      # 用户登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "{{ phone }}"
+            password: "{{ password }}"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 获取讨论列表
+      - get:
+          url: "/api/community/discussions"
+          qs:
+            page: "{{ randomInt(1, 5) }}"
+            limit: "{{ randomInt(10, 30) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+            - hasProperty: "discussions"
+            - hasProperty: "pagination"
+          afterResponse: "validateResponseTime"
+          
+      # 创建新讨论
+      - function: "generateDiscussionData"
+      - post:
+          url: "/api/community/discussions"
+          json: "{{ generateDiscussionData() }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            json: "$.id"
+            as: "discussionId"
+          ensure:
+            - statusCode: 201
+            - hasProperty: "id"
+            - hasProperty: "title"
+            - hasProperty: "content"
+          afterResponse: "validateResponseTime"
+          
+      # 查看创建的讨论
+      - get:
+          url: "/api/community/discussions/{{ discussionId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+          afterResponse: "validateResponseTime"
+          
+      # 删除创建的讨论（可选）
+      - delete:
+          url: "/api/community/discussions/{{ discussionId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 204
+          afterResponse: "validateResponseTime"
+
+  - name: "高并发讨论浏览测试"
+    flow:
+      # 用户登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 并发浏览讨论列表
+      - loop:
+          - get:
+              url: "/api/community/discussions"
+              qs:
+                page: "{{ randomInt(1, 3) }}"
+                limit: "{{ randomInt(10, 20) }}"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+          count: 10
+          name: "并发浏览讨论"
+
+  - name: "讨论创建压力测试"
+    flow:
+      # 用户登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 并发创建讨论
+      - loop:
+          - function: "generateDiscussionData"
+          - post:
+              url: "/api/community/discussions"
+              json: "{{ generateDiscussionData() }}"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+          count: 5
+          name: "并发创建讨论"
+
+  - name: "讨论接口错误处理测试"
+    weight: 0.2  # 20%的请求用于测试错误情况
+    flow:
+      # 测试未认证访问
+      - get:
+          url: "/api/community/discussions"
+          ensure:
+            - statusCode: 401
+          afterResponse: "validateResponseTime"
+            
+      # 测试创建讨论的验证错误
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      - post:
+          url: "/api/community/discussions"
+          json:
+            title: "A"  # 标题过短
+            content: "Test"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+            
+      # 测试删除不存在的讨论
+      - delete:
+          url: "/api/community/discussions/9999"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 404
+          afterResponse: "validateResponseTime"
+            
+      # 测试删除他人讨论（权限错误）
+      - delete:
+          url: "/api/community/discussions/1"  # 假设ID 1不是当前用户创建的
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 403
+          afterResponse: "validateResponseTime"
+
+  - name: "讨论分页和排序测试"
+    flow:
+      # 用户登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 测试不同分页参数
+      - get:
+          url: "/api/community/discussions"
+          qs:
+            page: 1
+            limit: 5
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            json: "$.pagination.total"
+            as: "totalDiscussions"
+            
+      - get:
+          url: "/api/community/discussions"
+          qs:
+            page: "{{ Math.ceil(totalDiscussions / 10) }}"  # 最后一页
+            limit: 10
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+
+  - name: "讨论数据一致性测试"
+    flow:
+      # 用户登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 创建讨论
+      - function: "generateDiscussionData"
+      - post:
+          url: "/api/community/discussions"
+          json: "{{ generateDiscussionData() }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            json: "$.id"
+            as: "newDiscussionId"
+            
+      # 验证讨论列表包含新创建的讨论
+      - get:
+          url: "/api/community/discussions"
+          qs:
+            page: 1
+            limit: 10
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - json: "$.discussions[?(@.id == '{{ newDiscussionId }}')]"
+              length: 1

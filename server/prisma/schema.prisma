@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  
+  // 关系定义
+  discussions Discussion[]
+}
+
+model Course {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String
+  level       String
+  duration    String
+  imageUrl    String
+}
+
+model Tutorial {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  author      String
+  date        String
+  readTime    String
+  imageUrl    String
+}
+
+model Discussion {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  authorPhone String
+  createdAt   DateTime @default(now())
+  
+  // 关系定义
+  author      User     @relation(fields: [authorPhone], references: [phone], onDelete: Cascade)
+}

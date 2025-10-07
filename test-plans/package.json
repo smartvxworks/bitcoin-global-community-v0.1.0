@@ -1,0 +1,47 @@
+{
+  "name": "bitcoin-china-community-tests",
+  "version": "1.0.0",
+  "description": "比特币中国社区测试套件",
+  "main": "run-tests.js",
+  "scripts": {
+    "test:unit": "jest --config=../jest.config.js",
+    "test:unit:coverage": "jest --config=../jest.config.js --coverage",
+    "test:unit:watch": "jest --config=../jest.config.js --watch",
+    "test:performance": "node run-tests.js performance",
+    "test:performance:basic": "artillery run artillery-base-config.yml",
+    "test:performance:registration": "artillery run registration-stress-test.yml",
+    "test:performance:login": "artillery run login-stress-test.yml",
+    "test:performance:courses": "artillery run courses-stress-test.yml",
+    "test:performance:community": "artillery run community-stress-test.yml",
+    "test:performance:all": "node run-tests.js performance",
+    "test:coverage": "npm run test:unit:coverage",
+    "test:ci": "npm run test:unit && npm run test:performance:basic",
+    "test:all": "node run-tests.js all",
+    "test:report": "artillery report reports/*.json",
+    "test:visualize": "artillery report --output reports/visual.html reports/*.json",
+    "test:stress": "artillery run registration-stress-test.yml && artillery run login-stress-test.yml",
+    "test:regression": "npm run test:unit && npm run test:performance:all",
+    "setup": "npm install && mkdir -p reports",
+    "clean": "rm -rf reports coverage"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.0",
+    "jest": "^29.7.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "testing",
+    "bitcoin",
+    "community",
+    "performance",
+    "jest",
+    "artillery"
+  ],
+  "author": "Bitcoin China Community Team",
+  "license": "MIT"
+}

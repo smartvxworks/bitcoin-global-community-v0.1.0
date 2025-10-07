@@ -1,0 +1,125 @@
+# 用户登录压力测试配置
+# 专门测试用户登录接口的性能和并发处理能力
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 30    # 预热阶段
+      arrivalRate: 10
+      name: 'Warm up'
+    - duration: 180   # 稳定负载阶段
+      arrivalRate: 30
+      name: 'Sustained load'
+    - duration: 60    # 峰值负载阶段
+      arrivalRate: 100
+      name: 'Peak load'
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+  payload:
+    path: "test-data/login-users.csv"
+    fields:
+      - "phone"
+      - "password"
+  processor: "./artillery-custom-functions.js"
+
+scenarios:
+  - name: "高并发用户登录"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "{{ phone }}"
+            password: "{{ password }}"
+          capture:
+            json: "$.token"
+            as: "authToken"
+          ensure:
+            - statusCode: 200
+            - contentType: "application/json"
+            - hasProperty: "token"
+            - hasProperty: "user"
+          afterResponse: "validateResponseTime"
+          
+      # 使用获取的token访问受保护资源
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+            - hasProperty: "user"
+          afterResponse: "validateResponseTime"
+          
+      # 访问课程列表（需要认证）
+      - get:
+          url: "/api/courses"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+          afterResponse: "validateResponseTime"
+
+  - name: "登录错误处理测试"
+    weight: 0.3  # 30%的请求用于测试错误情况
+    flow:
+      # 测试错误密码
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "WrongPassword123"
+          ensure:
+            - statusCode: 401
+          afterResponse: "validateResponseTime"
+            
+      # 测试不存在的用户
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "19999999999"
+            password: "Test123!"
+          ensure:
+            - statusCode: 401
+          afterResponse: "validateResponseTime"
+            
+      # 测试格式错误的请求
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: ""  # 空手机号
+            password: "Test123!"
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+            
+      # 测试缺少必需字段
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            # 缺少password字段
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+
+  - name: "Token验证性能测试"
+    flow:
+      # 先正常登录获取token
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "Test123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+            
+      # 多次验证同一个token的性能
+      - loop:
+          - get:
+              url: "/api/auth/me"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+          count: 5
+          name: "重复Token验证"

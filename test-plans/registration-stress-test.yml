@@ -1,0 +1,90 @@
+# 用户注册压力测试配置
+# 专门测试用户注册接口的性能和稳定性
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 30    # 预热阶段
+      arrivalRate: 5
+      name: 'Warm up'
+    - duration: 120   # 稳定负载阶段
+      arrivalRate: 20
+      name: 'Sustained load'
+    - duration: 60    # 峰值负载阶段
+      arrivalRate: 50
+      name: 'Peak load'
+    - duration: 30    # 恢复阶段
+      arrivalRate: 5
+      name: 'Cool down'
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+  payload:
+    path: "test-data/stress-users.csv"
+    fields:
+      - "phone"
+      - "password"
+  processor: "./artillery-custom-functions.js"
+
+scenarios:
+  - name: "高并发用户注册"
+    flow:
+      - function: "generateRandomPhone"
+      - function: "generateRandomPassword"
+      - post:
+          url: "/api/auth/register"
+          json:
+            phone: "{{ generateRandomPhone() }}"
+            password: "{{ generateRandomPassword() }}"
+          capture:
+            json: "$.id"
+            as: "userId"
+          ensure:
+            - statusCode: 201
+            - hasProperty: "id"
+            - hasProperty: "phone"
+          afterResponse: "validateResponseTime"
+          
+      # 验证注册的用户可以正常登录
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "{{ phone }}"
+            password: "{{ password }}"
+          ensure:
+            - statusCode: 200
+            - hasProperty: "token"
+          afterResponse: "validateResponseTime"
+
+  - name: "注册验证错误处理"
+    weight: 0.2  # 20%的请求用于测试错误情况
+    flow:
+      # 测试无效手机号格式
+      - post:
+          url: "/api/auth/register"
+          json:
+            phone: "invalid-phone"
+            password: "Test123!"
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+            
+      # 测试密码长度不足
+      - post:
+          url: "/api/auth/register"
+          json:
+            phone: "13800138000"
+            password: "123"
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+            
+      # 测试重复注册
+      - post:
+          url: "/api/auth/register"
+          json:
+            phone: "13800138000"  # 使用固定已存在号码
+            password: "Test123!"
+          ensure:
+            - statusCode: 409
+          afterResponse: "validateResponseTime"

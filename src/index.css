@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 性能优化样式 */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* 响应式图片 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 减少动画对性能的影响 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect:hover {
+    transform: none !important;
+  }
+}
+
+/* 打印样式优化 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* 比特币主题样式 */
+.bitcoin-gradient {
+  background: linear-gradient(135deg, #f7931a 0%, #ffb347 50%, #f7931a 100%);
+}
+
+.bitcoin-glow {
+  box-shadow: 0 0 20px rgba(247, 147, 26, 0.3);
+}
+
+.blockchain-bg {
+  background-image: 
+    linear-gradient(to right, rgba(247, 147, 26, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(247, 147, 26, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 自定义组件样式 */
+@layer components {
+  .btn-bitcoin {
+    @apply px-6 py-3 bg-crypto-orange text-white font-semibold rounded-lg hover:bg-crypto-orange-light focus:outline-none focus:ring-2 focus:ring-crypto-orange focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 bitcoin-glow;
+  }
+  
+  .btn-bitcoin-secondary {
+    @apply px-6 py-3 bg-transparent border-2 border-crypto-orange text-crypto-orange font-semibold rounded-lg hover:bg-crypto-orange hover:text-white focus:outline-none focus:ring-2 focus:ring-crypto-orange focus:ring-offset-2 transition-all duration-200;
+  }
+  
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+  }
+  
+  .card-bitcoin {
+    @apply bg-white dark:bg-crypto-gray-medium rounded-xl shadow-lg border border-gray-200 dark:border-crypto-gray-light p-6 hover:shadow-xl transition-all duration-300 bitcoin-glow;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 dark:border-crypto-gray-light rounded-lg focus:outline-none focus:ring-2 focus:ring-crypto-orange focus:border-transparent dark:bg-crypto-gray-dark dark:text-white transition-all duration-200;
+  }
+  
+  .nav-link {
+    @apply font-medium text-crypto-gray-light hover:text-crypto-orange dark:text-gray-300 dark:hover:text-crypto-orange transition-colors duration-200 relative;
+  }
+  
+  .nav-link.active {
+    @apply text-crypto-orange dark:text-crypto-orange;
+  }
+  
+  .nav-link.active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-crypto-orange;
+  }
+}
+
+/* 工具类 */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(156 163 175) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175);
+    border-radius: 3px;
+  }
+  
+  .bitcoin-text-gradient {
+    background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* 动画效果 */
+@keyframes bitcoin-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.animate-bitcoin-pulse {
+  animation: bitcoin-pulse 2s infinite;
+}
+
+/* 暗色主题优化 */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0a0a0a;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .mobile-nav {
+    @apply fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm;
+  }
+  
+  .mobile-menu {
+    @apply absolute top-0 right-0 h-full w-64 bg-white dark:bg-crypto-gray-dark shadow-xl transform transition-transform duration-300;
+  }
+}

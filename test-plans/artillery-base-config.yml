@@ -1,0 +1,109 @@
+# Artillery 基础性能测试配置
+# 比特币中国社区性能测试
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60    # 热身阶段：60秒
+      arrivalRate: 10 # 每秒10个新用户
+      name: 'Warm up phase'
+    - duration: 300   # 稳定负载阶段：5分钟
+      arrivalRate: 50 # 每秒50个新用户
+      name: 'Sustained load phase'
+    - duration: 60    # 峰值负载阶段：60秒
+      arrivalRate: 100 # 每秒100个新用户
+      name: 'Peak load phase'
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+      'User-Agent': 'Bitcoin Community Performance Test'
+  plugins:
+    ensure: {}
+    metrics-by-endpoint: {}
+  payload:
+    path: "test-data/users.csv"
+    fields:
+      - "phone"
+      - "password"
+  processor: "./test-plans/artillery-custom-functions.js"
+
+scenarios:
+  - name: "用户注册流程"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            phone: "{{ phone }}"
+            password: "{{ password }}"
+          capture:
+            json: "$.id"
+            as: "userId"
+          ensure:
+            - statusCode: 201
+            - contentType: "application/json"
+
+  - name: "用户登录流程"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "TestPassword123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+          ensure:
+            - statusCode: 200
+            - contentType: "application/json"
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 200
+
+  - name: "课程浏览流程"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/courses"
+          qs:
+            page: "{{ randomInt(1, 5) }}"
+            limit: "{{ randomInt(5, 20) }}"
+          ensure:
+            - statusCode: 200
+            - contentType: "application/json"
+      - get:
+          url: "/api/courses/{{ randomInt(1, 10) }}"
+          ensure:
+            - statusCode: 200
+
+  - name: "社区讨论流程"
+    weight: 2
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            phone: "13800138000"
+            password: "TestPassword123!"
+          capture:
+            json: "$.token"
+            as: "authToken"
+      - get:
+          url: "/api/community/discussions"
+          qs:
+            page: "{{ randomInt(1, 3) }}"
+            limit: "{{ randomInt(10, 30) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      - post:
+          url: "/api/community/discussions"
+          json:
+            title: "性能测试讨论 {{ randomInt(1000, 9999) }}"
+            content: "这是自动化性能测试创建的讨论内容"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ensure:
+            - statusCode: 201

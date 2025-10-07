@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BTC教学平台</title>
+    <link rel="icon" type="image/svg+xml" href="/bitcoin-china-community/favicon.svg" />
+    <script type="module">
+      // GitHub Pages SPA 回退
+      const path = window.location.pathname;
+      const repoPath = '/bitcoin-china-community';
+      
+      if (path === repoPath || path === repoPath + '/') {
+        // 根路径，直接加载应用
+        window.location.href = repoPath + '/';
+      } else if (path.startsWith(repoPath + '/')) {
+        // 子路径，保存后重定向
+        sessionStorage.setItem('github-pages-redirect', path);
+        window.location.href = repoPath + '/';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <h1>BTC教学平台</h1>
+      <p>请启用 JavaScript 以使用此应用。</p>
+      <p><a href="/bitcoin-china-community/">返回首页</a></p>
+    </noscript>
+  </body>
+</html>

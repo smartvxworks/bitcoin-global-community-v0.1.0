@@ -1,0 +1,20 @@
+{
+  "path": "e:\\project\\bitcoin-china-community",
+  "desc": "比特币中国社区全栈项目，包含React前端和Node.js后端，支持用户社区功能",
+  "id": "9dd80661e75f43909e0db84f83b42128",
+  "data": {
+    "spaceKey": "9dd80661e75f43909e0db84f83b42128",
+    "connections": {
+      "webIDE": "https://9dd80661e75f43909e0db84f83b42128.codebuddy.cloudstudio.club",
+      "preview": "https://9dd80661e75f43909e0db84f83b42128--{port}.codebuddy.cloudstudio.club",
+      "api": "https://9dd80661e75f43909e0db84f83b42128--api.codebuddy.cloudstudio.club",
+      "pty": "https://9dd80661e75f43909e0db84f83b42128--pty.codebuddy.cloudstudio.club"
+    }
+  },
+  "config": {
+    "api": "https://9dd80661e75f43909e0db84f83b42128--api.codebuddy.cloudstudio.club",
+    "pty": "https://9dd80661e75f43909e0db84f83b42128--pty.codebuddy.cloudstudio.club",
+    "region": "ap-shanghai",
+    "spaceKey": "9dd80661e75f43909e0db84f83b42128"
+  }
+}

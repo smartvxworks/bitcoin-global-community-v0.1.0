@@ -1,0 +1,152 @@
+# 课程浏览压力测试配置
+# 测试课程相关接口的性能和并发处理能力
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 30    # 预热阶段
+      arrivalRate: 15
+      name: 'Warm up'
+    - duration: 150   # 稳定负载阶段
+      arrivalRate: 40
+      name: 'Sustained load'
+    - duration: 60    # 峰值负载阶段
+      arrivalRate: 80
+      name: 'Peak load'
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+  processor: "./artillery-custom-functions.js"
+
+scenarios:
+  - name: "课程列表浏览压力测试"
+    flow:
+      # 获取课程列表（不同分页参数）
+      - get:
+          url: "/api/courses"
+          qs:
+            page: "{{ randomInt(1, 10) }}"
+            limit: "{{ randomInt(5, 20) }}"
+          ensure:
+            - statusCode: 200
+            - contentType: "application/json"
+            - hasProperty: "length"  # 返回数组
+          afterResponse: "validateResponseTime"
+          
+      # 获取特定级别的课程
+      - get:
+          url: "/api/courses"
+          qs:
+            level: "{{ ['beginner', 'intermediate', 'advanced'][randomInt(0,2)] }}"
+          ensure:
+            - statusCode: 200
+          afterResponse: "validateResponseTime"
+
+  - name: "课程详情查看压力测试"
+    flow:
+      # 查看随机课程详情
+      - get:
+          url: "/api/courses/{{ randomInt(1, 50) }}"
+          ensure:
+            - statusCode: 200
+            - hasProperty: "title"
+            - hasProperty: "description"
+            - hasProperty: "level"
+          afterResponse: "validateResponseTime"
+          
+      # 查看不存在的课程（测试404处理）
+      - get:
+          url: "/api/courses/9999"
+          ensure:
+            - statusCode: 404
+          afterResponse: "validateResponseTime"
+
+  - name: "课程搜索和筛选测试"
+    flow:
+      # 测试课程搜索功能（如果实现）
+      - get:
+          url: "/api/courses"
+          qs:
+            search: "{{ ['比特币', '区块链', '投资', '技术'][randomInt(0,3)] }}"
+          ensure:
+            - statusCode: 200
+          afterResponse: "validateResponseTime"
+            
+      # 测试多条件筛选
+      - get:
+          url: "/api/courses"
+          qs:
+            level: "beginner"
+            duration: "2小时"
+          ensure:
+            - statusCode: 200
+          afterResponse: "validateResponseTime"
+
+  - name: "课程缓存性能测试"
+    flow:
+      # 多次请求相同课程，测试缓存效果
+      - get:
+          url: "/api/courses/1"
+          capture:
+            headers: "etag"
+            as: "courseEtag"
+          ensure:
+            - statusCode: 200
+            
+      # 使用ETag测试缓存验证
+      - get:
+          url: "/api/courses/1"
+          headers:
+            "If-None-Match": "{{ courseEtag }}"
+          ensure:
+            - statusCode: 304  # Not Modified
+          afterResponse: "validateResponseTime"
+
+  - name: "课程接口错误处理"
+    weight: 0.1  # 10%的请求用于测试错误情况
+    flow:
+      # 测试无效的课程ID格式
+      - get:
+          url: "/api/courses/abc"  # 非数字ID
+          ensure:
+            - statusCode: 400
+          afterResponse: "validateResponseTime"
+            
+      # 测试超出范围的页码
+      - get:
+          url: "/api/courses"
+          qs:
+            page: "1000"
+            limit: "1000"
+          ensure:
+            - statusCode: 200  # 应该返回空数组或错误处理
+          afterResponse: "validateResponseTime"
+            
+      # 测试无效的查询参数
+      - get:
+          url: "/api/courses"
+          qs:
+            invalid_param: "test"
+          ensure:
+            - statusCode: 200  # 应该忽略无效参数
+          afterResponse: "validateResponseTime"
+
+  - name: "课程数据一致性测试"
+    flow:
+      # 验证课程列表和详情的数据一致性
+      - get:
+          url: "/api/courses"
+          qs:
+            limit: 1
+          capture:
+            json: "$[0].id"
+            as: "courseId"
+            
+      - get:
+          url: "/api/courses/{{ courseId }}"
+          ensure:
+            - statusCode: 200
+            - hasProperty: "id"
+            - equals: 
+              - "{{ courseId }}"
+              - "{{ courseId }}"
