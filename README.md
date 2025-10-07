@@ -209,7 +209,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   问题反馈: [GitHub Issues](https://github.com/your-repo/issues)
 - Email Contact: contact@your-domain.com  
   邮箱联系: contact@your-domain.com
-
+## 最终效果：
+- 中文：
+<img width="1773" height="734" alt="image" src="https://github.com/user-attachments/assets/ac998877-2d35-412f-a52d-18017dd64382" />
+- 英文：
+<img width="1703" height="785" alt="image" src="https://github.com/user-attachments/assets/e183ff8e-0dac-4c76-9e6f-15972e035021" />
+- 日文：
+<img width="1618" height="747" alt="image" src="https://github.com/user-attachments/assets/aff71bcc-9514-4b86-a9fa-631303f74c2c" />
+- 韩文：
+<img width="1571" height="740" alt="image" src="https://github.com/user-attachments/assets/84a01cb2-7bb2-448d-bb6f-589b8c02bad6" />
+- 法语：
+  <img width="1569" height="780" alt="image" src="https://github.com/user-attachments/assets/02659b78-08e8-466c-93d3-c5abc62b6ab8" />
+  
+## 存在问题  
+- 项目中依然存在很多问题，让我们一起维护吧
 ---
 
 **Project ID**: 7556575683889512767  
@@ -218,3 +231,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **创建者**: Satoshi  
 **Project URL**: https://github.com/smartvxworks/bitcoin-global-community-v0.1.0
 **项目地址**: https://github.com/smartvxworks/bitcoin-global-community-v0.1.0
+
